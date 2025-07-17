@@ -24,9 +24,10 @@ class LibraryListview(ListView):
      template_name = 'relationship_app/library_list.html'
      context_object_name = 'libraries'
 
+
 def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'All Libraries'
+        context["books"] = self.object.book_set.all()
         return context
 
 
