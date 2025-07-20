@@ -28,6 +28,23 @@ def list_books(request):
     return render(request, 'relationship_app/list_books.html', context)
 
 
+# Function-based view for user registration
+def register(request):
+    """
+    User registration view using Django's UserCreationForm
+    """
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('list_books')
+    else:
+        form = UserCreationForm()
+    
+    return render(request, 'relationship_app/register.html', {'form': form})
+
+
 # Class-based view that lists all libraries
 @method_decorator(login_required, name='dispatch')
 class LibraryListView(ListView):
@@ -53,33 +70,10 @@ class LibraryDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["books"] = self.object.books.all()  # Using the related name from your models
+        context["books"] = self.object.books.all()
         return context
 
 
-class CustomLoginView(LoginView):
-    """
-    Custom login view using Django's built-in LoginView
-    """
-    template_name = 'relationship_app/login.html'
-    redirect_authenticated_user = True
-    
-    def get_success_url(self):
-        return reverse_lazy('list_books')
-
-
-class CustomLogoutView(LogoutView):
-    """
-    Custom logout view using Django's built-in LogoutView
-    """
-    template_name = 'relationship_app/logout.html'
-
-
-class RegisterView(View):
-    """
-    User registration view using Django's UserCreationForm
-    """
-   
 # Class-based view for a specific book's details
 @method_decorator(login_required, name='dispatch')
 class BookDetailView(DetailView):
