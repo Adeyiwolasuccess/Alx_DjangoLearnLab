@@ -1,13 +1,12 @@
 from django.shortcuts import render
-from django.views.generic import ListView
-from django.views.generic.detail import DetailView
-from .models import Book
-from .models import Library
+from django.views.generic import ListView, DetailView
+from .models import Book, Library
 
+#  Function-based view that displays all books
 def list_books(request):
     """
-    Function-based view that displays all books in the database.
-    Shows book titles and their authors in a simple text list.
+    Displays all books in the database.
+    Shows book titles and their authors.
     """
     books = Book.objects.all()
     context = {
@@ -16,18 +15,20 @@ def list_books(request):
     }
     return render(request, 'relationship_app/list_books.html', context)
 
-# Class-based view to list all libraries
-class LibraryListview(ListView):
+#  Class-based view that lists all libraries
+class LibraryListView(ListView):
     """
-    Class-based ListView that displays all libraries in the database.
-    Shows library names and associated information.
+    Displays all libraries in the database.
     """
     model = Library
     template_name = 'relationship_app/library_list.html'
     context_object_name = 'libraries'
 
-# ✅ Class-based view to display details of a specific library and its books
+#  Class-based view for a specific library and its books
 class LibraryDetailView(DetailView):
+    """
+    Shows details of a specific library and its related books.
+    """
     model = Library
     template_name = "relationship_app/library_detail.html"
     context_object_name = "library"
@@ -36,3 +37,12 @@ class LibraryDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context["books"] = self.object.book_set.all()
         return context
+
+#  Class-based view for a specific book’s details
+class BookDetailView(DetailView):
+    """
+    Shows detailed information about a specific book.
+    """
+    model = Book
+    template_name = "relationship_app/book_detail.html"
+    context_object_name = "book"
