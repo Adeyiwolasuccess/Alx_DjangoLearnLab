@@ -56,10 +56,11 @@ ROOT_URLCONF = 'LibraryProject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'relationship_app' / 'templates'],
-        'APP_DIRS': True,
+        'DIRS': [],  # Remove the custom DIRS setting
+        'APP_DIRS': True,  # This allows Django to find templates in app directories
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
