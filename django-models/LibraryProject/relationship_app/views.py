@@ -7,12 +7,83 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
+from django.http import HttpResponseForbidden
+from .models import UserProfile
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
 from django.views import View
 from .models import Book
 from .models import Library
 
+# Role-check functions
+def is_admin(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
+
+def is_librarian(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
+
+def is_member(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
+
+# Role-based views with access control
+@user_passes_test(is_admin)
+def admin_view(request):
+    """
+    Admin-only view for managing the entire library system
+    Only accessible to users with 'Admin' role
+    """
+    total_books = Book.objects.count()
+    total_libraries = Library.objects.count()
+    all_users = UserProfile.objects.all()
+    
+    context = {
+        'title': 'Admin Dashboard',
+        'total_books': total_books,
+        'total_libraries': total_libraries,
+        'all_users': all_users,
+        'user_role': 'Admin'
+    }
+    return render(request, 'relationship_app/admin_view.html', context)
+
+
+@user_passes_test(is_librarian)
+def librarian_view(request):
+    """
+    Librarian-only view for managing books and library operations
+    Only accessible to users with 'Librarian' role
+    """
+    books = Book.objects.all()
+    libraries = Library.objects.all()
+    
+    context = {
+        'title': 'Librarian Dashboard',
+        'books': books,
+        'libraries': libraries,
+        'user_role': 'Librarian'
+    }
+    return render(request, 'relationship_app/librarian_view.html', context)
+
+
+@user_passes_test(is_member)
+def member_view(request):
+    """
+    Member-only view for browsing books and libraries
+    Only accessible to users with 'Member' role
+    """
+    books = Book.objects.all()
+    libraries = Library.objects.all()
+    
+    context = {
+        'title': 'Member Dashboard',
+        'books': books,
+        'libraries': libraries,
+        'user_role': 'Member'
+    }
+    return render(request, 'relationship_app/member_view.html', context)
+
+
+# Function-based view that displays all books
 @login_required
 def list_books(request):
     """
