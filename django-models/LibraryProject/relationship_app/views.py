@@ -79,21 +79,7 @@ class RegisterView(View):
     """
     User registration view using Django's UserCreationForm
     """
-    template_name = 'relationship_app/register.html'
-    
-    def get(self, request):
-        form = UserCreationForm()
-        return render(request, self.template_name, {'form': form})
-    
-    def post(self, request):
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # Automatically log in the user after registration
-            return redirect('list_books')  # Redirect to books list after registration
-        return render(request, self.template_name, {'form': form})
-
-
+   
 # Class-based view for a specific book's details
 @method_decorator(login_required, name='dispatch')
 class BookDetailView(DetailView):
