@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib import admin
+from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import Book 
@@ -36,6 +36,16 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'role']
     list_filter = ['role']
     search_fields = ['user__username', 'user__email']
+
+class RoleBasedAdminSite(AdminSite):
+    def has_permission(self, request):
+        user = request.user
+        if user.is_active and user.is_authenticated:
+            try:
+                return user.userprofile.role == 'Admin'
+            except UserProfile.DoesNotExist:
+                return False
+        return False
 
 
 # Re-register UserAdmin
