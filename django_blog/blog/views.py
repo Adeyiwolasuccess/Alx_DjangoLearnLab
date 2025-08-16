@@ -43,3 +43,4 @@ def profile(request):
         return redirect('profile')
 
     return render(request, 'profile.html')
+    
