@@ -19,7 +19,7 @@ urlpatterns = [
     path('posts/', PostListView.as_view(), name='posts'),  # list view stays plural
     path('post/new/', PostCreateView.as_view(), name='post-create'),
     path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),  # detail view stays plural
-    path('post/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 
     # Auth
