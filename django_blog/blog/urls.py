@@ -21,6 +21,10 @@ urlpatterns = [
     path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),  # detail view stays plural
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+    # Comment
+    path('posts/<int:post_id>/comments/new/', views.add_comment, name='add-comment'),
+    path('comments/<int:comment_id>/edit/', views.edit_comment, name='edit-comment'),
+    path('comments/<int:comment_id>/delete/', views.delete_comment, name='delete-comment'),
 
     # Auth
     path('login/', views.login_view, name='login'),
