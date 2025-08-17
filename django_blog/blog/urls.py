@@ -30,6 +30,16 @@ urlpatterns = [
     path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='edit-comment'),
     path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='delete-comment'),
 
+    # Search
+    path('search/', views.search_view, name='search'),
+    path('tags/<str:tag_name>/', views.posts_by_tag, name='posts_by_tag'),
+
+    # Tag filtering
+    
+    # 🔥 Tag filter
+    path('tag/<str:tag_name>/', views.posts_by_tag, name='posts_by_tag'),
+
+    
     # Auth
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

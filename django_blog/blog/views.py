@@ -1,4 +1,5 @@
 # blog/views.py
+from django.db.models import Q
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -9,7 +10,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from .forms import UserUpdateForm, PostForm
-from .models import Post, Comment
+from .models import Post, Tag, Comment
 from .forms import CommentForm
 
 # -------------------------------
@@ -111,6 +112,23 @@ def delete_comment(request, comment_id):
     post_id = comment.post.pk
     comment.delete()
     return redirect('post-detail', pk=post_id)
+
+def search_view(request):
+    query = request.GET.get('q')
+    results = Post.objects.all()
+    if query:
+        results = results.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
+    return render(request, 'blog/search_results.html', {'results': results, 'query': query})
+
+def posts_by_tag(request, tag_name):
+    tag = get_object_or_404(Tag, name=tag_name)
+    posts = Post.objects.filter(tags=tag).order_by('-published_date')
+    return render(request, 'blog/posts_by_tag.html', {'tag': tag, 'posts': posts})
+
 
 # -------------------------------
 # Post CRUD views
