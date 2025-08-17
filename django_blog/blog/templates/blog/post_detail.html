@@ -13,17 +13,21 @@
 {% endblock %}
 
 <h3>Comments</h3>
-{% for comment in post.comments.all %}
-    <p><strong>{{ comment.author.username }}</strong>: {{ comment.content }}</p>
-    {% if comment.author == user %}
-        <a href="{% url 'edit-comment' comment.id %}">Edit</a>
-        <a href="{% url 'delete-comment' comment.id %}">Delete</a>
-    {% endif %}
-{% empty %}
-    <p>No comments yet.</p>
-{% endfor %}
+<ul>
+  {% for comment in comments %}
+    <li>
+      <p><strong>{{ comment.author }}</strong>: {{ comment.text }}</p>
+      <a href="{% url 'comment_edit' comment.pk %}">Edit</a> |
+      <a href="{% url 'comment_delete' comment.pk %}">Delete</a>
+    </li>
+  {% empty %}
+    <li>No comments yet.</li>
+  {% endfor %}
+</ul>
 
-{% if user.is_authenticated %}
+<a href="{% url 'comment_new' post.pk %}">Add a comment</a>
+
+
     <h4>Add a comment</h4>
     <form method="POST" action="{% url 'add-comment' post.id %}">
         {% csrf_token %}
