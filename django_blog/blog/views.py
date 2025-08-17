@@ -1,27 +1,24 @@
 # blog/views.py
 from django.db.models import Q
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-from .forms import UserUpdateForm, PostForm
+from .forms import UserUpdateForm, PostForm, CommentForm
 from .models import Post, Tag, Comment
-from .forms import CommentForm
 
 # -------------------------------
 # Functional views
 # -------------------------------
 
-# Home page
 def home(request):
     return render(request, 'home.html')
 
-# Register page
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -32,13 +29,6 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib import messages
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -52,32 +42,25 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'blog/login.html', {'form': form})
 
-def home(request):
-    return render(request, 'blog/home.html')
-
 def logout_view(request):
     logout(request)
     return redirect('login')
 
-
-
-# Profile page (only logged-in users)
 @login_required
 def profile(request):
     if request.method == 'POST':
         user = request.user
-        email = request.POST.get('email')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
+        user.email = request.POST.get('email')
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
         user.save()
         messages.success(request, "Profile updated successfully!")
         return redirect('profile')
-
     return render(request, 'profile.html')
+
+# -------------------------------
+# Comment CRUD (function-based)
+# -------------------------------
 
 @login_required
 def add_comment(request, post_id):
@@ -113,6 +96,10 @@ def delete_comment(request, comment_id):
     comment.delete()
     return redirect('post-detail', pk=post_id)
 
+# -------------------------------
+# Search and tags
+# -------------------------------
+
 def search_view(request):
     query = request.GET.get('q')
     results = Post.objects.all()
@@ -129,9 +116,8 @@ def posts_by_tag(request, tag_name):
     posts = Post.objects.filter(tags=tag).order_by('-published_date')
     return render(request, 'blog/posts_by_tag.html', {'tag': tag, 'posts': posts})
 
-
 # -------------------------------
-# Post CRUD views
+# Post CRUD (class-based)
 # -------------------------------
 
 class PostListView(ListView):
@@ -152,22 +138,23 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    form_class = PostForm
+    form_class = PostForm   # ✅ ensures TagWidget is used
     template_name = 'blog/post_form.html'
     success_url = reverse_lazy('posts')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        form.save_m2m()  # ✅ ensures tags are saved
+        return response
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    form_class = PostForm
+    form_class = PostForm   # ✅ ensures TagWidget is used
     template_name = 'blog/post_form.html'
 
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
@@ -175,12 +162,13 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('posts')
 
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
+# -------------------------------
+# Comment CRUD (class-based)
+# -------------------------------
 
-
-class CommentCreateView(CreateView):
+class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
     fields = ['content']
     template_name = 'blog/comment_form.html'
@@ -194,19 +182,23 @@ class CommentCreateView(CreateView):
     def get_success_url(self):
         return self.object.post.get_absolute_url()
 
-
-class CommentUpdateView(UpdateView):
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
     fields = ['content']
     template_name = 'blog/comment_form.html'
 
+    def test_func(self):
+        return self.request.user == self.get_object().author
+
     def get_success_url(self):
         return self.object.post.get_absolute_url()
 
-
-class CommentDeleteView(DeleteView):
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment_confirm_delete.html'
+
+    def test_func(self):
+        return self.request.user == self.get_object().author
 
     def get_success_url(self):
         return self.object.post.get_absolute_url()
