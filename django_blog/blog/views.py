@@ -1,4 +1,3 @@
-# blog/views.py
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -11,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from .forms import UserUpdateForm, PostForm, CommentForm
 from .models import Post, Tag, Comment
+from taggit.models import Tag as TaggitTag   # ✅ import taggit's Tag for slug lookups
 
 # -------------------------------
 # Functional views
@@ -115,6 +115,23 @@ def posts_by_tag(request, tag_name):
     tag = get_object_or_404(Tag, name=tag_name)
     posts = Post.objects.filter(tags=tag).order_by('-published_date')
     return render(request, 'blog/posts_by_tag.html', {'tag': tag, 'posts': posts})
+
+
+# ✅ NEW: Class-based view for tags by slug
+class PostByTagListView(ListView):
+    model = Post
+    template_name = "blog/post_list.html"
+    context_object_name = "posts"
+
+    def get_queryset(self):
+        self.tag = get_object_or_404(TaggitTag, slug=self.kwargs.get("tag_slug"))
+        return Post.objects.filter(tags__in=[self.tag])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tag"] = self.tag
+        return context
+
 
 # -------------------------------
 # Post CRUD (class-based)
