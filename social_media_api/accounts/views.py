@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions
-from rest_framework.response import Response, status
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -78,3 +79,22 @@ class UnfollowUserView(generics.GenericAPIView):
         request.user.following.remove(user_to_unfollow)
         return Response({"detail": f"You have unfollowed {user_to_unfollow.username}."},
                         status=status.HTTP_200_OK)
+
+
+class FollowersListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        followers = user.followers.all()  # depends on your model’s related_name
+        data = [{"id": f.id, "username": f.username} for f in followers]
+        return Response(data)
+    
+class FollowingListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        following = user.following.all()  # users I follow
+        data = [{"id": f.id, "username": f.username} for f in following]
+        return Response(data)
