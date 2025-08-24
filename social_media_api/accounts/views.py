@@ -2,8 +2,10 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response, status
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from accounts.models import CustomUser
 
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, LightweightUserSerializer
 
@@ -45,12 +47,12 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     
 
 class FollowUserView(generics.GenericAPIView):
-    queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         """Follow a user"""
-        user_to_follow = get_object_or_404(User, pk=pk)
+        user_to_follow = get_object_or_404(CustomUser, pk=pk)
 
         if user_to_follow == request.user:
             return Response({"detail": "You cannot follow yourself."},
@@ -62,12 +64,12 @@ class FollowUserView(generics.GenericAPIView):
 
 
 class UnfollowUserView(generics.GenericAPIView):
-    queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         """Unfollow a user"""
-        user_to_unfollow = get_object_or_404(User, pk=pk)
+        user_to_unfollow = get_object_or_404(CustomUser, pk=pk)
 
         if user_to_unfollow == request.user:
             return Response({"detail": "You cannot unfollow yourself."},
